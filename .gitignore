@@ -1,0 +1,31 @@
+# Python
+__pycache__/
+*.py[oc]
+*.egg-info
+build/
+dist/
+wheels/
+.pytest_cache/
+
+# Virtual environments
+.venv/
+env/
+venv/
+
+# Secrets / local config
+.env
+.streamlit/secrets.toml
+
+# Local SQLite
+*.db
+data/*.db
+
+# Generated ETL outputs (keep folder placeholders)
+data/extract/*
+!data/extract/.gitkeep
+data/transform/*
+!data/transform/.gitkeep
+
+# Generated artifacts
+*.png
+.DS_Store
