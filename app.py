@@ -8,6 +8,7 @@ import streamlit as st
 from langchain_core.messages import AIMessage, HumanMessage
 
 from nl_data_agent.agents.router import nl_data_agent
+from nl_data_agent.db.seed import seed
 from nl_data_agent.paths import default_db_path, project_root
 
 st.set_page_config(
@@ -818,6 +819,40 @@ def ensure_session() -> None:
         st.session_state.chat = []
 
 
+def _database_ready(path) -> bool:
+    if not path.exists() or path.stat().st_size == 0:
+        return False
+    try:
+        conn = sqlite3.connect(path)
+        cur = conn.cursor()
+        cur.execute("SELECT COUNT(*) FROM users")
+        count = int(cur.fetchone()[0])
+        conn.close()
+        return count > 0
+    except Exception:
+        return False
+
+
+def ensure_database() -> None:
+    """
+    Streamlit Cloud does not ship the gitignored .db file.
+    Build it from the CSVs in data/ on first run if missing/empty.
+    """
+    path = default_db_path()
+    if _database_ready(path):
+        return
+
+    with st.spinner("First run: loading rideshare sample data into SQLite…"):
+        try:
+            seed(path)
+            st.toast("Sample database ready.", icon="✅")
+        except Exception as exc:
+            st.error(
+                f"Could not create the SQLite database automatically: {exc}. "
+                "Make sure the CSV files under data/ are in the repo."
+            )
+
+
 def render_sidebar() -> None:
     with st.sidebar:
         st.markdown("### Dispatch board")
@@ -831,7 +866,8 @@ def render_sidebar() -> None:
         st.markdown("---")
         if stats is None:
             st.warning(
-                "SQLite DB not found. Run `python -m nl_data_agent.db.seed` first."
+                "SQLite DB is still missing. Check that data/*.csv are deployed, "
+                "then reboot the app."
             )
         else:
             st.markdown(
@@ -946,6 +982,7 @@ def render_chat_page() -> None:
 def main() -> None:
     inject_styles()
     ensure_session()
+    ensure_database()
     render_hero()
     render_sidebar()
 

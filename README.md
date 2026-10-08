@@ -88,6 +88,8 @@ streamlit run app.py
 ```
 
 Opens a rideshare-themed chat app that routes questions to SQL (SQLite) or ETL.
+On Streamlit Cloud, the `.db` file is not in git — the app auto-seeds SQLite from
+`data/*.csv` on first run.
 
 ### CLI
 
